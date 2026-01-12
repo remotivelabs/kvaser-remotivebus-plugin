@@ -1,0 +1,66 @@
+name: CI Pipeline
+
+on:
+  push:
+
+jobs:
+  rust:
+    name: Build and Test Rust Code
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: rustfmt, clippy
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang-dev
+
+      - name: Build libraries for testing
+        run: make build-amd64-kvaser-libs
+
+      - name: Build
+        run: |
+          source .env
+          cargo build
+
+      - name: Check formatting
+        run: |
+          source .env
+          cargo fmt -- --check
+
+      - name: Run Clippy
+        run: |
+          source .env
+          cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run tests
+        run: |
+          source .env
+          cargo test --all
+
+  json:
+    name: Lint JSON files
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Prettier
+        run: npm install --global prettier
+
+      - name: Check JSON formatting
+        run: |
+          prettier --check "**/*.json"

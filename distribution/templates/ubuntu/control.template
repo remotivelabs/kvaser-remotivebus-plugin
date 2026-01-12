@@ -1,0 +1,11 @@
+Package: {{PACKAGE_NAME}}
+Version: {{VERSION}}
+Architecture: {{ARCH}}
+Maintainer: RemotiveLabs <support@remotivelabs.com>
+Depends: {{DEPENDENCIES}}
+Section: utils
+Priority: optional
+Homepage: https://github.com/remotivelabs/kvaser-remotivebus-plugin
+Description: Kvaser RemotiveBus Plugin service
+ Provides LIN bus functionality for Docker containers via Kvaser hardware.
+ This service enables RemotiveBus to communicate with Kvaser CAN/LIN interfaces.

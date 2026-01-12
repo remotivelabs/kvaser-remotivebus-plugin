@@ -1,0 +1,15 @@
+*~
+src/kvaser_raw_binding.rs
+build/
+target/
+
+# terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+crash.log
+terraform.tfvars  # Only if it contains secrets
+keys/
+
+*.asc

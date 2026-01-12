@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
+    # Stop and disable the service
+    systemctl stop kvaser-remotivebus-plugin.service || true
+    systemctl disable kvaser-remotivebus-plugin.service || true
+
+    # Reload systemd daemon
+    systemctl daemon-reload || true
+fi
+
+exit 0

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "action": "start",
+  "bus": {
+    "type": "vcan",
+    "device": "myvlin",
+    "baudrate": 9600,
+    "baudrate_fd": 600,
+    "host_device": "myhostvlin",
+    "txqueuelen": 1000,
+    "plugin": {
+      "driver": "kvaser",
+      "name": "MyVLIN_DEBUG",
+      "host_mode": "slave",
+      "device_id": "011121:2",
+      "base_tick_ms": 5
+    }
+  }
+}

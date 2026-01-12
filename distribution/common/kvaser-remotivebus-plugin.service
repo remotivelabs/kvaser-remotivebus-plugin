@@ -1,0 +1,11 @@
+[Unit]
+Description=Kvaser RemotiveBus Plugin service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/kvaser-remotivebus-plugin
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

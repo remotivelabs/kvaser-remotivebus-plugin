@@ -1,0 +1,179 @@
+diff --git a/Makefile b/Makefile
+index e5ce72e..bb63923 100644
+--- a/Makefile
++++ b/Makefile
+@@ -70,17 +70,17 @@ USERLIBS  += canlib
+ USERLIBS  += linlib
+ 
+ DRIVERS   += common
+-DRIVERS   += leaf
++#DRIVERS   += leaf
+ DRIVERS   += mhydra
+-DRIVERS   += usbcanII
+-DRIVERS   += virtualcan
++#DRIVERS   += usbcanII
++#DRIVERS   += virtualcan
+ # KV_NO_PCI should be set on targets that do not have PCI, such as RaspberryPi.
+-ifndef KV_NO_PCI
+-DRIVERS   += pcican
+-DRIVERS   += pcican2
+-DRIVERS   += pciefd
+-UTILS     += kvflash
+-endif
++# ifndef KV_NO_PCI
++# DRIVERS   += pcican
++# DRIVERS   += pcican2
++# DRIVERS   += pciefd
++# UTILS     += kvflash
++# endif
+ 
+ #---------------------------------
+ # Debug levels are defined in config.mak
+diff --git a/dkms/Makefile b/dkms/Makefile
+index 7ec0f20..df726c3 100644
+--- a/dkms/Makefile
++++ b/dkms/Makefile
+@@ -64,16 +64,16 @@
+ # Kvaser linuxcan drivers DKMS Makefile
+ 
+ DRIVERS   += common
+-DRIVERS   += leaf
++#DRIVERS   += leaf
+ DRIVERS   += mhydra
+-DRIVERS   += usbcanII
+-DRIVERS   += virtualcan
+-# KV_NO_PCI should be set on targets that do not have PCI, such as RaspberryPi.
+-ifndef KV_NO_PCI
+-DRIVERS   += pcican
+-DRIVERS   += pcican2
+-DRIVERS   += pciefd
+-endif
++# DRIVERS   += usbcanII
++# DRIVERS   += virtualcan
++# # KV_NO_PCI should be set on targets that do not have PCI, such as RaspberryPi.
++# ifndef KV_NO_PCI
++# DRIVERS   += pcican
++# DRIVERS   += pcican2
++# DRIVERS   += pciefd
++# endif
+ 
+ #---------------------------------
+ # Debug levels are defined in config.mak
+diff --git a/dkms/dkms-no-pci.conf b/dkms/dkms-no-pci.conf
+index 0ce9697..5d255d3 100644
+--- a/dkms/dkms-no-pci.conf
++++ b/dkms/dkms-no-pci.conf
+@@ -6,21 +6,21 @@ BUILT_MODULE_NAME[0]="kvcommon"
+ BUILT_MODULE_LOCATION[0]="common/"
+ DEST_MODULE_LOCATION[0]="/kernel/drivers/usb/misc/"
+ 
+-BUILT_MODULE_NAME[1]="leaf"
+-BUILT_MODULE_LOCATION[1]="leaf/"
+-DEST_MODULE_LOCATION[1]="/kernel/drivers/usb/misc/"
++# BUILT_MODULE_NAME[1]="leaf"
++# BUILT_MODULE_LOCATION[1]="leaf/"
++# DEST_MODULE_LOCATION[1]="/kernel/drivers/usb/misc/"
+ 
+-BUILT_MODULE_NAME[2]="mhydra"
+-BUILT_MODULE_LOCATION[2]="mhydra/"
+-DEST_MODULE_LOCATION[2]="/kernel/drivers/usb/misc/"
++BUILT_MODULE_NAME[1]="mhydra"
++BUILT_MODULE_LOCATION[1]="mhydra/"
++DEST_MODULE_LOCATION[1]="/kernel/drivers/usb/misc/"
+ 
+-BUILT_MODULE_NAME[3]="usbcanII"
+-BUILT_MODULE_LOCATION[3]="usbcanII/"
+-DEST_MODULE_LOCATION[3]="/kernel/drivers/usb/misc/"
++# BUILT_MODULE_NAME[3]="usbcanII"
++# BUILT_MODULE_LOCATION[3]="usbcanII/"
++# DEST_MODULE_LOCATION[3]="/kernel/drivers/usb/misc/"
+ 
+-BUILT_MODULE_NAME[4]="kvvirtualcan"
+-BUILT_MODULE_LOCATION[4]="virtualcan/"
+-DEST_MODULE_LOCATION[4]="/kernel/drivers/char/"
++# BUILT_MODULE_NAME[4]="kvvirtualcan"
++# BUILT_MODULE_LOCATION[4]="virtualcan/"
++# DEST_MODULE_LOCATION[4]="/kernel/drivers/char/"
+ 
+ KV_INSTALL_TARGET=none
+ POST_INSTALL="kv_dkms_script.sh no-pci ${KV_INSTALL_TARGET}"
+diff --git a/dkms/dkms.conf b/dkms/dkms.conf
+index 390f4b1..0228fc0 100644
+--- a/dkms/dkms.conf
++++ b/dkms/dkms.conf
+@@ -6,33 +6,33 @@ BUILT_MODULE_NAME[0]="kvcommon"
+ BUILT_MODULE_LOCATION[0]="common/"
+ DEST_MODULE_LOCATION[0]="/kernel/drivers/usb/misc/"
+ 
+-BUILT_MODULE_NAME[1]="leaf"
+-BUILT_MODULE_LOCATION[1]="leaf/"
+-DEST_MODULE_LOCATION[1]="/kernel/drivers/usb/misc/"
++# BUILT_MODULE_NAME[1]="leaf"
++# BUILT_MODULE_LOCATION[1]="leaf/"
++# DEST_MODULE_LOCATION[1]="/kernel/drivers/usb/misc/"
+ 
+-BUILT_MODULE_NAME[2]="mhydra"
+-BUILT_MODULE_LOCATION[2]="mhydra/"
+-DEST_MODULE_LOCATION[2]="/kernel/drivers/usb/misc/"
++BUILT_MODULE_NAME[1]="mhydra"
++BUILT_MODULE_LOCATION[1]="mhydra/"
++DEST_MODULE_LOCATION[1]="/kernel/drivers/usb/misc/"
+ 
+-BUILT_MODULE_NAME[3]="kvpcican"
+-BUILT_MODULE_LOCATION[3]="pcican/"
+-DEST_MODULE_LOCATION[3]="/kernel/drivers/char/"
++# BUILT_MODULE_NAME[3]="kvpcican"
++# BUILT_MODULE_LOCATION[3]="pcican/"
++# DEST_MODULE_LOCATION[3]="/kernel/drivers/char/"
+ 
+-BUILT_MODULE_NAME[4]="kvpcicanII"
+-BUILT_MODULE_LOCATION[4]="pcican2/"
+-DEST_MODULE_LOCATION[4]="/kernel/drivers/char/"
++# BUILT_MODULE_NAME[4]="kvpcicanII"
++# BUILT_MODULE_LOCATION[4]="pcican2/"
++# DEST_MODULE_LOCATION[4]="/kernel/drivers/char/"
+ 
+-BUILT_MODULE_NAME[5]="kvpciefd"
+-BUILT_MODULE_LOCATION[5]="pciefd/"
+-DEST_MODULE_LOCATION[5]="/kernel/drivers/char/"
++# BUILT_MODULE_NAME[5]="kvpciefd"
++# BUILT_MODULE_LOCATION[5]="pciefd/"
++# DEST_MODULE_LOCATION[5]="/kernel/drivers/char/"
+ 
+-BUILT_MODULE_NAME[6]="usbcanII"
+-BUILT_MODULE_LOCATION[6]="usbcanII/"
+-DEST_MODULE_LOCATION[6]="/kernel/drivers/usb/misc/"
++# BUILT_MODULE_NAME[6]="usbcanII"
++# BUILT_MODULE_LOCATION[6]="usbcanII/"
++# DEST_MODULE_LOCATION[6]="/kernel/drivers/usb/misc/"
+ 
+-BUILT_MODULE_NAME[7]="kvvirtualcan"
+-BUILT_MODULE_LOCATION[7]="virtualcan/"
+-DEST_MODULE_LOCATION[7]="/kernel/drivers/char/"
++# BUILT_MODULE_NAME[7]="kvvirtualcan"
++# BUILT_MODULE_LOCATION[7]="virtualcan/"
++# DEST_MODULE_LOCATION[7]="/kernel/drivers/char/"
+ 
+ KV_INSTALL_TARGET=none
+ POST_INSTALL="kv_dkms_script.sh ${KV_INSTALL_TARGET}"
+diff --git a/mhydra/installscript.sh b/mhydra/installscript.sh
+index 31b4e29..c74cf8b 100755
+--- a/mhydra/installscript.sh
++++ b/mhydra/installscript.sh
+@@ -95,11 +95,11 @@ if lsmod | grep $SOCKETCAN_DRIVER ; then
+   modprobe -r $SOCKETCAN_DRIVER
+ fi
+ 
+-if [ ! -f $BLACKLIST_FILE ] ; then
+-  echo "Blacklisting SocketCAN driver $SOCKETCAN_DRIVER to prevent it from auto-loading."
+-  install -m 755 -d $MODPROBE_DIR
+-  echo "blacklist $SOCKETCAN_DRIVER" > $BLACKLIST_FILE
+-fi
++# if [ ! -f $BLACKLIST_FILE ] ; then
++#   echo "Blacklisting SocketCAN driver $SOCKETCAN_DRIVER to prevent it from auto-loading."
++#   install -m 755 -d $MODPROBE_DIR
++#   echo "blacklist $SOCKETCAN_DRIVER" > $BLACKLIST_FILE
++# fi
+ 
+ $DEPMOD -a
+ if [ "$?" -ne 0 ] ; then

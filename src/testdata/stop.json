@@ -1,0 +1,12 @@
+{
+  "action": "stop",
+  "bus": {
+    "type": "vcan",
+    "host_device": "myhostvlin",
+    "plugin": {
+      "driver": "kvaser",
+      "host_mode": "master",
+      "device_id": "011121:1"
+    }
+  }
+}

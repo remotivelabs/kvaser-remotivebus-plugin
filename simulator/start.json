@@ -1,0 +1,19 @@
+{
+  "action": "start",
+
+  "bus": {
+    "driver": "vcan",
+    "device": "lin0",
+    "host_device": "lin0",
+    "baudrate": 19200,
+
+    "plugin": {
+      "driver": "kvaser",
+      "type": "simulator",
+      "name": "My LIN-bus",
+      "host_mode": "slave",
+      "database": "simulator/simulator.ldf",
+      "schedule_table_name": "DEVMLIN01Schedule01"
+    }
+  }
+}

@@ -1,0 +1,187 @@
+name: Publish Kvaser RemotiveBus Plugin Packages
+
+# Requires the following variables set:
+# - vars.WORKLOAD_IDENTITY_PROVIDER - Workload identity provider for GCP authentication
+# - vars.SERVICE_ACCOUNT_EMAIL - Service account email for GCP authentication
+# - vars.APT_REPOSITORY - name of APT repository to publish DEB packages to
+# - vars.YUM_REPOSITORY - name of YUM repository to publish RPM packages to
+# - vars.GCP_PROJECT_ID - GCP project ID
+# - vars.GCP_REGION - GCP region
+# - vars.RELEASE_BUCKET - GCS bucket name to upload installer to
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 0.1.0"
+        required: true
+
+jobs:
+
+  get-version:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from Cargo.toml (via Makefile)
+        id: get_version
+        run: |
+          version=$(make version)
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Fail if tag already exists
+        run: |
+          tag="v${{ steps.get_version.outputs.version }}"
+          if git ls-remote --exit-code --tags origin "$tag" >/dev/null 2>&1; then
+            echo "❌ Tag '$tag' already exists on remote. Aborting release."
+            exit 1
+          else
+            echo "✅ No existing tag '$tag' found on remote."
+          fi
+
+      - name: Enforce pre-release version on dev branches
+        env:
+          current_version: ${{ steps.get_version.outputs.version }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            if [[ ! "$current_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-beta[0-9]+$ ]]; then
+              echo "Error: Pre-release version (x.y.z-betaN) required on development branches."
+              exit 1
+            fi
+          fi
+
+      - name: Validate current version matches input version
+        run: |
+          if [ "${{ steps.get_version.outputs.version }}" != "${{ github.event.inputs.version }}" ]; then
+            echo "Error: Version mismatch! Project: ${{ steps.get_version.outputs.version }}, Input: ${{ github.event.inputs.version }}"
+            exit 1
+          fi
+
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+
+  package:
+    name: Build All Packages
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build all packages
+        run: make all
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: build/pkgs/*/*
+          retention-days: 90
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: build/*.tar.gz
+          retention-days: 90
+
+  publish-to-artifact-registry:
+    name: Publish to Repositories
+    runs-on: ubuntu-24.04
+    needs: [package, get-version]
+    permissions:
+      contents: 'read'    # 👈 required for workload identity auth
+      id-token: 'write'   # 👈 required for workload identity auth
+
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v5
+        with:
+          name: packages
+          path: ./pkgs
+          merge-multiple: true # flatten the downloaded file structure
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT_EMAIL }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Publish DEB packages to Artifact Registry
+        run: |
+          echo "Publishing DEB packages to Artifact Registry APT repository..."
+          for deb in ./pkgs/deb/*.deb; do
+            echo "Uploading $deb"
+            gcloud artifacts apt upload ${{ vars.APT_REPOSITORY }} \
+              --location=${{ vars.GCP_REGION }} \
+              --source="$deb"
+          done
+
+      - name: Publish RPM packages to Artifact Registry
+        run: |
+          echo "Publishing RPM packages to Artifact Registry YUM repository..."
+          for rpm in ./pkgs/rpm/*.rpm; do
+            echo "Uploading $rpm"
+            gcloud artifacts yum upload ${{ vars.YUM_REPOSITORY }} \
+              --location=${{ vars.GCP_REGION }} \
+              --source="$rpm"
+          done
+
+  publish-to-bucket:
+    name: Publish to Bucket
+    runs-on: ubuntu-24.04
+    needs: [package, get-version]
+    permissions:
+      contents: 'read'    # 👈 required for workload identity auth
+      id-token: 'write'   # 👈 required for workload identity auth
+
+    steps:
+      - name: Download installer package
+        uses: actions/download-artifact@v5
+        with:
+          name: installer
+          path: ./installer
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT_EMAIL }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Upload installer to bucket
+        uses: google-github-actions/upload-cloud-storage@v3
+        with:
+          path: installer
+          glob: kvaser-remotivebus-plugin-*.tar.gz
+          destination: "${{ vars.RELEASE_BUCKET }}/kvaser-remotivebus-plugin"
+          parent: false
+          gzip: false
+
+  create-tag:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write  # 👈 required for pushing tags
+    needs:
+      - get-version
+      - publish-to-artifact-registry
+      - publish-to-bucket
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create and push tag
+        uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ needs.get-version.outputs.version }}
+          message: "Release kvaser-remotivebus-plugin ${{ needs.get-version.outputs.version }}"
+          tag_author_name: "github-actions[bot]"
+          tag_author_email: "github-actions[bot]@users.noreply.github.com"

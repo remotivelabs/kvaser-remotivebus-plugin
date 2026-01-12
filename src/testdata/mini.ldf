@@ -1,0 +1,43 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*  Description:   LIN Description file                                       */
+/*                                                                            */
+/* ************************************************************************** */
+
+LIN_description_file;
+LIN_protocol_version = "2.2";
+LIN_language_version = "2.2";
+LIN_speed = 19.2 kbps;
+
+Channel_name = "";
+
+Nodes {
+	Master: TheMaster, 5.000 ms, 1.000 ms;
+	Slaves: Slave1, Slave2;
+}
+
+Frames {
+	Slave1LinFrame01: 0x31, Slave1, 7 {
+		TheSignal01, 0;
+	}
+	Slave2LinFrame02: 0x32, Slave2, 8 {
+		TheSignal02, 48;
+	}
+	MasterLinFrame01: 0x32, TheMaster, 8 {
+		TheMasterSignal01, 48;
+	}
+}
+
+Schedule_tables {
+	MiniLinRequestScheduleTable {
+		MasterReq delay 15.000 ms;
+	}
+	MiniLinResponseScheduleTable {
+		SlaveResp delay 15.000 ms;
+	}
+	TheScheduleTable01 {
+		Slave1LinFrame01 delay 15.000 ms;
+		Slave2LinFrame02 delay 10.000 ms;
+		MasterLinFrame01 delay 10.000 ms;
+	}
+}

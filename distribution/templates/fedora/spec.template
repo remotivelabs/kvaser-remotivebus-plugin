@@ -1,0 +1,48 @@
+Name:           {{PACKAGE_NAME}}
+Version:        {{VERSION}}
+Release:        1%{?dist}
+Summary:        Kvaser RemotiveBus Plugin service
+License:        Proprietary
+URL:            https://github.com/remotivelabs/kvaser-remotivebus-plugin
+Packager:       RemotiveLabs <support@remotivelabs.com>
+Requires:       {{DEPENDENCIES}}
+# Auto-require library dependencies
+AutoReq:        yes
+
+%description
+Provides LIN bus functionality for Docker containers via Kvaser hardware.
+This service enables RemotiveBus to communicate with Kvaser CAN/LIN interfaces.
+
+%prep
+# No preparation needed for prebuilt binary
+
+%build
+# No build needed for prebuilt binary
+
+%install
+mkdir -p %{buildroot}/usr/bin
+mkdir -p %{buildroot}/usr/lib/systemd/system
+
+cp %{_sourcedir}/kvaser-remotivebus-plugin %{buildroot}/usr/bin/
+cp %{_sourcedir}/kvaser-remotivebus-plugin.service %{buildroot}/usr/lib/systemd/system/
+
+%files
+/usr/bin/kvaser-remotivebus-plugin
+/usr/lib/systemd/system/kvaser-remotivebus-plugin.service
+
+%post
+systemctl daemon-reload
+systemctl enable kvaser-remotivebus-plugin.service
+
+%preun
+if [ $1 -eq 0 ] ; then
+    systemctl stop kvaser-remotivebus-plugin.service >/dev/null 2>&1 || :
+    systemctl disable kvaser-remotivebus-plugin.service >/dev/null 2>&1 || :
+fi
+
+%postun
+systemctl daemon-reload
+
+%changelog
+* Wed Nov 26 2025 RemotiveLabs <support@remotivelabs.com> - {{VERSION}}-1
+- Initial release
