@@ -59,7 +59,8 @@ channels:
       type: remotivebus
       config:
         type: vcan
-        host_device: lin0
+        device: lin0
+        host_device: vlin0
         plugin:
           driver: kvaser
           host_mode: master
