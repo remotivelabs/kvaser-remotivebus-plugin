@@ -16,16 +16,30 @@ pub async fn run(
     vbus_id: &str,
     config: msg::Config,
     cancel_rx: oneshot::Receiver<()>,
+    ready_tx: oneshot::Sender<Result<()>>,
 ) -> Result<()> {
+    let ready_tx = std::sync::Mutex::new(Some(ready_tx));
+    let fail = |e: anyhow::Error| -> anyhow::Error {
+        if let Some(tx) = ready_tx.lock().unwrap().take() {
+            let _ = tx.send(Err(anyhow::anyhow!("{e}")));
+        }
+        e
+    };
+    let succeed = || {
+        if let Some(tx) = ready_tx.lock().unwrap().take() {
+            let _ = tx.send(Ok(()));
+        }
+    };
+
     log::info!("Opening vbus {vbus_id}");
 
-    let vbus = socketcan::tokio::CanSocket::open(vbus_id)?;
+    let vbus = socketcan::tokio::CanSocket::open(vbus_id).map_err(|e| fail(e.into()))?;
 
     log::info!("Opened vbus {vbus_id}");
 
     match config.plugin {
         msg::Plugin::Simulator(sim_config) => {
-            let ldf = ldf::parse_file(&sim_config.database)?;
+            let ldf = ldf::parse_file(&sim_config.database).map_err(&fail)?;
             let base_tick_ms = Duration::from_millis(ldf.nodes.base_tick_ms as u64);
 
             match sim_config.host_mode {
@@ -34,14 +48,15 @@ pub async fn run(
                         &sim_config.name,
                         ldf,
                         &sim_config.schedule_table_name,
-                    )?;
-
+                    )
+                    .map_err(&fail)?;
+                    succeed();
                     run_slave_role(&mut slave, &vbus, cancel_rx, base_tick_ms).await
                 }
 
                 HostMode::Master => {
-                    let mut master = SlaveSimulator::new(&sim_config.name)?;
-
+                    let mut master = SlaveSimulator::new(&sim_config.name).map_err(&fail)?;
+                    succeed();
                     run_master_role(&mut master, &vbus, cancel_rx, base_tick_ms).await
                 }
             }
@@ -56,8 +71,9 @@ pub async fn run(
                         lin_config.name.as_ref().unwrap_or(&config.host_device),
                         &lin_config.device_id,
                         u32::from(config.baudrate),
-                    )?;
-
+                    )
+                    .map_err(&fail)?;
+                    succeed();
                     run_slave_role(&mut slave, &vbus, cancel_rx, base_tick_ms).await
                 }
 
@@ -66,8 +82,9 @@ pub async fn run(
                         lin_config.name.as_ref().unwrap_or(&config.host_device),
                         &lin_config.device_id,
                         u32::from(config.baudrate),
-                    )?;
-
+                    )
+                    .map_err(&fail)?;
+                    succeed();
                     run_master_role(&mut master, &vbus, cancel_rx, base_tick_ms).await
                 }
             }

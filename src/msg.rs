@@ -1,5 +1,27 @@
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Serialize)]
+pub struct Response {
+    pub success: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+impl Response {
+    pub fn ok() -> Self {
+        Response {
+            success: true,
+            error: None,
+        }
+    }
+    pub fn err(msg: impl ToString) -> Self {
+        Response {
+            success: false,
+            error: Some(msg.to_string()),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "action", content = "bus")]
 pub enum Message {

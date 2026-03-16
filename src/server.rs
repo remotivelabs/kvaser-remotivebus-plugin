@@ -1,9 +1,10 @@
 //! This module implements the server that listens for incoming messages via Unix domain socket
 //! and starts/stops plugin connections accordingly.
 use anyhow::Result;
+use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
-use tokio::io::AsyncReadExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{UnixListener, UnixStream};
 use tokio::sync::{mpsc, oneshot};
 use tokio::task;
@@ -56,11 +57,12 @@ pub async fn serve(socket_path: &str, shutdown: CancellationToken) -> Result<()>
 
         match read_json_from_socket::<msg::Message>(&mut sock).await {
                     Ok(action) => {
-            handle_msg(action, &mut tasks, exit_tx.clone()).await;
+            handle_msg(action, &mut sock, &mut tasks, exit_tx.clone()).await;
                     }
 
                     Err(e) => {
             log::error!("Failed to read action {e:?}");
+            let _ = write_json_to_socket(&mut sock, &msg::Response::err(e.to_string())).await;
                     }
         }
             }
@@ -74,6 +76,7 @@ pub async fn serve(socket_path: &str, shutdown: CancellationToken) -> Result<()>
 
 async fn handle_msg(
     msg: msg::Message,
+    sock: &mut UnixStream,
     tasks: &mut HashMap<String, Task>,
     exit_tx: mpsc::Sender<TaskResult>,
 ) {
@@ -81,22 +84,24 @@ async fn handle_msg(
 
     match msg {
         msg::Message::StartAction(config) => {
-            handle_start_action(config, tasks, exit_tx).await;
+            handle_start_action(config, sock, tasks, exit_tx).await;
         }
         msg::Message::StopAction(config) => {
-            handle_stop_action(config, tasks).await;
+            handle_stop_action(config, sock, tasks).await;
         }
     }
 }
 
 async fn handle_start_action(
     config: msg::Config,
+    sock: &mut UnixStream,
     tasks: &mut HashMap<String, Task>,
     exit_tx: mpsc::Sender<TaskResult>,
 ) {
     let id: String = config.host_device.clone();
 
     let (cancel_tx, cancel_rx) = tokio::sync::oneshot::channel();
+    let (ready_tx, ready_rx) = tokio::sync::oneshot::channel();
 
     let task = Task {
         handle: tokio::spawn(async move {
@@ -104,7 +109,7 @@ async fn handle_start_action(
 
             log::info!("Launched task for {id}");
 
-            let res = worker::run(&id, config, cancel_rx).await;
+            let res = worker::run(&id, config, cancel_rx, ready_tx).await;
 
             log::log!(
                 if res.is_ok() {
@@ -124,35 +129,73 @@ async fn handle_start_action(
         cancel_tx,
     };
 
-    tasks.insert(id, task);
+    // Looks a bit weird, but the wrapping here is
+    // timeout (Err if timeout, otherwise Ok)
+    //   |-> ready_rx receives a value (Err if closed without a value, Ok otherwise)
+    //     |-> the value returned by ready_rx (Ok() if success, Err(error message) otherwise)
+    let response = match time::timeout(Duration::from_secs(5), ready_rx).await {
+        Ok(Ok(Ok(()))) => {
+            tasks.insert(id, task);
+            msg::Response::ok()
+        }
+        Ok(Ok(Err(e))) => {
+            task.handle.abort();
+            msg::Response::err(e)
+        }
+        Ok(Err(_)) => {
+            task.handle.abort();
+            msg::Response::err("worker exited before signalling readiness")
+        }
+        Err(_) => {
+            task.handle.abort();
+            msg::Response::err("timed out waiting for bridge setup")
+        }
+    };
+
+    let _ = write_json_to_socket(sock, &response).await;
 }
 
-async fn handle_stop_action(config: msg::Config, tasks: &mut HashMap<String, Task>) {
-    if let Some(mut task) = tasks.remove(&config.host_device) {
+async fn handle_stop_action(
+    config: msg::Config,
+    sock: &mut UnixStream,
+    tasks: &mut HashMap<String, Task>,
+) {
+    let response = if let Some(mut task) = tasks.remove(&config.host_device) {
         let _ = task.cancel_tx.send(());
 
         tokio::select! {
             res = &mut task.handle => {
-        match res {
+                match res {
                     Ok(Ok(())) => {
-            log::info!("Task {} exited", config.host_device);
+                        log::info!("Task {} exited", config.host_device);
                     }
                     Ok(Err(err)) => {
-            log::error!("Task {} failed: {err}", config.host_device);
+                        log::error!("Task {} failed: {err}", config.host_device);
                     }
                     Err(join) => log::error!("join err: {join}"), // panicked / cancelled
-        }
+                }
             }
 
             _ = time::sleep(Duration::from_secs(1)) => {
-        task.handle.abort();
-        let _ = task.handle.await;
-        log::warn!("Task aborted after 1s");
+                task.handle.abort();
+                let _ = task.handle.await;
+                log::warn!("Task aborted after 1s");
             }
         }
+
+        msg::Response::ok()
     } else {
         log::warn!("Task {} is not running", config.host_device);
-    }
+        msg::Response::err(format!("no running task for {}", config.host_device))
+    };
+
+    let _ = write_json_to_socket(sock, &response).await;
+}
+
+async fn write_json_to_socket<T: Serialize>(socket: &mut UnixStream, value: &T) -> Result<()> {
+    let bytes = serde_json::to_vec(value)?;
+    socket.write_all(&bytes).await?;
+    Ok(())
 }
 
 async fn read_json_from_socket<T>(socket: &mut UnixStream) -> anyhow::Result<T>
