@@ -7,7 +7,7 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 use tokio::fs;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 
 use kvaser_remotivebus_plugin::msg;
@@ -55,6 +55,10 @@ async fn run(plugin_socket_path: &str, msg_path: &str) -> Result<()> {
     let bytes = serde_json::to_vec(&msg).context("Failed to serialize message")?;
 
     stream.write_all(&bytes).await?;
+
+    let mut buf = [0u8; 256];
+    let n = stream.read(&mut buf).await?;
+    println!("{}", String::from_utf8_lossy(&buf[..n]));
 
     Ok(())
 }
