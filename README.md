@@ -1,13 +1,13 @@
 # Kvaser RemotiveBus Plugin
 
-Example plugin for [RemotiveBus](http://docs.remotivelabs.com/docs/remotive-bus) enabling LIN over Kvaser Hydra devices.
+Example plugin for [RemotiveBus](http://docs.remotivelabs.com/docs/remotive-bus) enabling LIN over Kvaser Hydra interfaces.
 
-The plugin has been tested with the following Kvaser adapters:
+The plugin has been tested with the following Kvaser interfaces for CAN and LIN:
 
 - https://kvaser.com/product/kvaser-hybrid-pro-can-lin/
 - https://kvaser.com/product/kvaser-hybrid-pro-2xcan-lin/
 
-You'll find device drivers for the adapters on the product pages above.
+You'll find device drivers for the interfaces on the product pages above.
 
 ## Getting started
 
