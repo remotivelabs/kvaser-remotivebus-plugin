@@ -7,13 +7,13 @@ libs-%:
 	@echo "Building Kvaser libraries for $*..."
 	@mkdir -p $(OUT_LIB_BASE)/$*
 	@mkdir -p $(OUT_INTERMEDIATE_BASE)/kvaser-linuxcan/$*
-	@if [ ! -f $(OUT_INTERMEDIATE_BASE)/kvaser-linuxcan/$*/linuxcan-5.50.312.tar.gz ]; then \
+	@if [ ! -f $(OUT_INTERMEDIATE_BASE)/kvaser-linuxcan/$*/linuxcan_5_51_461.tar.gz ]; then \
 		cd $(OUT_INTERMEDIATE_BASE)/kvaser-linuxcan/$* && \
 		wget --content-disposition "https://www.kvaser.com/downloads-kvaser/?utm_source=software&utm_ean=7330130980754&utm_status=latest"; \
 	fi
 	@if [ ! -f $(OUT_INTERMEDIATE_BASE)/kvaser-linuxcan/$*/linuxcan/.unpacked ]; then \
 		cd $(OUT_INTERMEDIATE_BASE)/kvaser-linuxcan/$* && \
-		tar -zxf linuxcan-5.50.312.tar.gz && \
+		tar -zxf linuxcan_5_51_461.tar.gz && \
 		touch linuxcan/.unpacked; \
 	fi
 	@if [ ! -f $(OUT_INTERMEDIATE_BASE)/kvaser-linuxcan/$*/linuxcan/.patched ]; then \
