@@ -114,6 +114,18 @@ Example `stop` command:
 }
 ```
 
+Each command expects a JSON response on the same socket connection. Example success response:
+
+```json
+{"success": true}
+```
+
+Example error response:
+
+```json
+{"success": false, "error": "timed out waiting for bridge setup"}
+```
+
 ### Message schema
 
 | Field                     | Type     | Required | Description |
@@ -132,6 +144,13 @@ Example `stop` command:
 | `bus.plugin.host_mode`    | string   | yes      | LIN host mode. Must be `master`|`slave`. |
 | `bus.plugin.device_id`    | string   | yes      | LIN device id. Example `011121:1`. |
 | `bus.plugin.base_tick_ms` | string   | no       | LIN base tick in milliseconds. Defaults to `5` ms. |
+
+### Response schema
+
+| Field     | Type    | Description |
+|-----------|---------|-------------|
+| `success` | boolean | `true` if the command succeeded, `false` otherwise. |
+| `error`   | string  | Error message. Only present when `success` is `false`. |
 
 ## Build System
 
