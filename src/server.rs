@@ -193,7 +193,8 @@ async fn handle_stop_action(
 }
 
 async fn write_json_to_socket<T: Serialize>(socket: &mut UnixStream, value: &T) -> Result<()> {
-    let bytes = serde_json::to_vec(value)?;
+    let mut bytes = serde_json::to_vec(value)?;
+    bytes.push(b'\n');
     socket.write_all(&bytes).await?;
     Ok(())
 }
