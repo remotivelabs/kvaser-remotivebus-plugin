@@ -452,7 +452,7 @@ dependencies = [
 
 [[package]]
 name = "kvaser-remotivebus-plugin"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "anyhow",
  "bindgen",
@@ -541,7 +541,7 @@ dependencies = [
 
 [[package]]
 name = "nb"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d5439c4ad607c3c23abf66de8c8bf57ba8adcd1f129e699851a6e43935d339d"
 
