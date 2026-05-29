@@ -136,7 +136,7 @@ pkg-%-rpm: build-%-plugin .rpm-docker
 		-e PACKAGE_NAME \
 		--user $(shell id -u):$(shell id -g) \
 		kvaser-rpm-builder \
-		distribution/scripts/build-rpm.sh fedora 41 $*
+		distribution/scripts/build-rpm.sh fedora 44 $*
 
 .PHONY: installer
 installer: pkg-amd64-deb pkg-arm64-deb pkg-amd64-rpm pkg-arm64-rpm
