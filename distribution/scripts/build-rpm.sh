@@ -21,7 +21,7 @@ esac
 
 # Dependency mapping based on distro version
 case "$DISTRO-$VERSION" in
-    fedora-40|fedora-41)
+    fedora-40|fedora-41|fedora-44)
         DEPENDENCIES="remotivebusd, can-utils, systemd"
         ;;
     centos-9|rocky-9)

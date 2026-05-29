@@ -1,4 +1,4 @@
-FROM fedora:41
+FROM fedora:44
 
 # Build environment interface contract defaults (overridden by .env)
 ENV PACKAGE_NAME=kvaser-remotivebus-plugin
