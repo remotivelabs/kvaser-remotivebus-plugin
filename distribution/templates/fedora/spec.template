@@ -6,8 +6,11 @@ License:        Proprietary
 URL:            https://github.com/remotivelabs/kvaser-remotivebus-plugin
 Packager:       RemotiveLabs <support@remotivelabs.com>
 Requires:       {{DEPENDENCIES}}
-# Auto-require library dependencies
+# Auto-require library dependencies, but exclude Kvaser libs (canlib/linlib)
+# since they are installed manually from the Kvaser linuxcan SDK and are not
+# provided by any RPM package on the system.
 AutoReq:        yes
+%global __requires_exclude ^lib(canlib|linlib)\\.so.*$
 
 %description
 Provides LIN bus functionality for Docker containers via Kvaser hardware.
