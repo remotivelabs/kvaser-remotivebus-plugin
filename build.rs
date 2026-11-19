@@ -36,6 +36,12 @@ fn main() {
         let bindings = bindgen::Builder::default()
             .header("ffi-codegen/kvaser.h")
             .clang_arg(format!("-I{}", include_path))
+            // stdlib.h drags in the C allocator, which the plugin never calls.
+            // Newer rustc rejects redeclaring these std runtime symbols with
+            // `c_ulong` sizes (suspicious_runtime_symbol_definitions).
+            .blocklist_function(
+                "malloc|calloc|realloc|reallocarray|free|aligned_alloc|posix_memalign",
+            )
             .raw_line("#![cfg_attr(rustfmt, rustfmt_skip)]")
             .raw_line("#![allow(clippy::all)]")
             .raw_line("#![allow(non_snake_case)]")
