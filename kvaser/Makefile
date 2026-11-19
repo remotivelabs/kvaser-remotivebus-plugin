@@ -1,4 +1,8 @@
 # Use environment variables from .env
+OUT_BIN_BASE ?= build/bin
+OUT_LIB_BASE ?= build/lib
+OUT_INTERMEDIATE_BASE ?= build/intermediate
+
 # Pin the linuxcan release. Kvaser's "latest" download link moves with every
 # release, which changes the tarball name and breaks kvaser/linuxcan/canlib.patch.
 # When bumping, update the patch to match the new release.
