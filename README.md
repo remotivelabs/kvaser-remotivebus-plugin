@@ -9,6 +9,25 @@ The plugin has been tested with the following Kvaser interfaces for CAN and LIN:
 
 You'll find device drivers for the interfaces on the product pages above.
 
+## Installation
+
+On Debian/Ubuntu, install the plugin from the RemotiveLabs apt repository:
+
+```bash
+sudo apt install kvaser-remotivebus-plugin
+```
+
+This requires the RemotiveLabs apt repository (`packages.remotivelabs.com`) to be configured, which the [RemotiveBus](https://github.com/remotivelabs/remotivebus) installer does for you.
+
+The package installs, enables and starts the `kvaser-remotivebus-plugin` systemd service. Verify that it is running:
+
+```bash
+systemctl status kvaser-remotivebus-plugin
+```
+
+> [!NOTE]
+> The plugin is a separate package from RemotiveBus. If you uninstall and reinstall RemotiveBus, check that the plugin is still installed and running. If it is not, creating a network that uses the plugin fails with `Failed to connect to "/run/remotivebus/plugins/kvaser.sock": Connection refused`.
+
 ## Getting started
 
 ```bash
