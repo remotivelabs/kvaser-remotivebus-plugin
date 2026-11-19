@@ -1,11 +1,10 @@
 # Use environment variables from .env
-# The download URL always serves the latest linuxcan release, so the upstream
-# file name changes with every release. Save it under a fixed name instead.
-LINUXCAN_URL := https://www.kvaser.com/downloads-kvaser/?utm_source=software&utm_ean=7330130980754&utm_status=latest
-LINUXCAN_TARBALL := linuxcan.tar.gz
-OUT_BIN_BASE ?= build/bin
-OUT_LIB_BASE ?= build/lib
-OUT_INTERMEDIATE_BASE ?= build/intermediate
+# Pin the linuxcan release. Kvaser's "latest" download link moves with every
+# release, which changes the tarball name and breaks kvaser/linuxcan/canlib.patch.
+# When bumping, update the patch to match the new release.
+LINUXCAN_VERSION := 5.51.461
+LINUXCAN_TARBALL := linuxcan_$(subst .,_,$(LINUXCAN_VERSION)).tar.gz
+LINUXCAN_URL := https://pim.kvaser.com/var/assets/Product_Resources/7330130980754/$(LINUXCAN_VERSION)/$(LINUXCAN_TARBALL)
 
 libs-%:
 	@echo "Building Kvaser libraries for $*..."
